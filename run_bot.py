@@ -1,8 +1,14 @@
 import os
 import django
+import pytz
+from datetime import datetime, timedelta
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
+
+timezone = pytz.timezone('Europe/Moscow')  # Указываем временную зону через pytz
+local_time = timezone.localize(datetime.now())  # Корректное добавление временной зоны
+current_time = timezone.localize(datetime.now())  # Аналогично
 
 from environs import Env
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup

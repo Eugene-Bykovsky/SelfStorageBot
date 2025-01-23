@@ -1,16 +1,25 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from apscheduler.schedulers.background import BackgroundScheduler
 from .models import StorageRate, StorageBox
-from .keyboard import (
+from handlers.keyboard import ( 
     get_main_menu_keyboard,
+    get_pickup_points_keyboard,
+    get_delivery_options_keyboard, 
     get_storage_rate_keyboard,
     get_date_keyboard,
     get_confirm_keyboard
 )
+
 from collections import defaultdict
+import datetime
+import pytz
+from datetime import datetime
+
+timezone = pytz.timezone('Europe/Moscow')
+current_time = timezone.localize(datetime.now())
 
 USER_DATA = defaultdict(dict)
 
-
+# 1. Основной обработчик кнопок
 def button_handler(update, context):
     query = update.callback_query
     query.answer()
@@ -84,17 +93,15 @@ def button_handler(update, context):
         message = "Свяжитесь с администратором по номеру: +7 (123) 456-78-90"
         context.bot.send_message(chat_id=chat_id, text=message)
 
-
+# 2. Обработка ввода адреса пользователем
 def address_handler(update, context):
-    """Обработка адреса пользователя."""
     chat_id = update.message.chat_id
     USER_DATA[chat_id]["address"] = update.message.text
     message = "Адрес сохранён. Укажите ваш номер телефона:"
     context.bot.send_message(chat_id=chat_id, text=message)
 
-
+# 3. Обработка ввода номера телефона пользователем
 def phone_handler(update, context):
-    """Обработка номера телефона пользователя."""
     chat_id = update.message.chat_id
     phone = update.message.text
     USER_DATA[chat_id]["phone"] = phone
@@ -102,3 +109,23 @@ def phone_handler(update, context):
     message = "Телефон сохранён. Подтвердите ваш заказ:"
     reply_markup = get_confirm_keyboard()
     context.bot.send_message(chat_id=chat_id, text=message, reply_markup=reply_markup)
+
+# 4. Напоминание пользователю о бесплатных замерах
+def send_reminder_for_measurement(update, context):
+    chat_id = update.message.chat_id
+    message = "Не забывайте, что курьер бесплатно произведет замеры перед отправкой."
+    context.bot.send_message(chat_id=chat_id, text=message)
+
+# 5. Напоминание о конце срока аренды
+def send_rent_expiration_reminder(context):
+    orders = StorageBox.objects.all()
+    now = timezone.localize(datetime.now())  # Локализуем текущее время
+
+    for order in orders:
+        if (order.end_date - now).days == 14:
+            context.bot.send_message(order.user_id, "Через 2 недели заканчивается срок аренды ячейки.")
+
+# 6. Настройка планировщика
+scheduler = BackgroundScheduler()
+scheduler.add_job(send_rent_expiration_reminder, 'interval', days=1)
+scheduler.start()
