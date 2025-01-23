@@ -1,5 +1,0 @@
-Django>=4.0,<5.0
-python-telegram-bot>=20.0
-django-environ
-environs
-pysqlite3  
