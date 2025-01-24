@@ -1,5 +1,4 @@
-Django>=4.0,<5.0
-python-telegram-bot>=20.0
-django-environ
-environs
-pysqlite3  
+requests==2.32.3
+aiogram==3.15.0
+pytz==2024.2
+python-dotenv==1.0.1
