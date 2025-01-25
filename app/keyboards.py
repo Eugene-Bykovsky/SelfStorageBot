@@ -1,5 +1,6 @@
 from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
                            InlineKeyboardMarkup, InlineKeyboardButton)
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 consent_keyboard = ReplyKeyboardMarkup(
     keyboard=[
@@ -45,3 +46,19 @@ order_box_keyboard = InlineKeyboardMarkup(
         ],
     ]
 )
+
+
+async def warehouse_addresses_keyboard(places):
+    """
+    Генератор клавиатуры с адресами и координатами.
+    """
+    keyboard = InlineKeyboardBuilder()
+
+    for place in places:
+        button_text = place["address"]
+        callback_data = f"location:{place['latitude']}:{place['longitude']}"
+
+        keyboard.add(InlineKeyboardButton(text=button_text,
+                                          callback_data=callback_data))
+
+    return keyboard.as_markup()
