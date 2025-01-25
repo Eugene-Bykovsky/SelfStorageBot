@@ -28,6 +28,7 @@ WELCOME_MESSAGE = (
 async def cmd_start(message: Message):
     telegram_id = message.from_user.id
     user_name = message.from_user.first_name
+    usef_last_name = message.from_user.last_name
 
     # Проверяем, есть ли пользователь в базе данных через API
     response = requests.get(f'{API_URL}/users/?search={telegram_id}')
@@ -39,6 +40,7 @@ async def cmd_start(message: Message):
         # Если пользователя нет, создаём его
         create_response = requests.post(f'{API_URL}/users/', json={
             'telegram_id': telegram_id,
+            'username': user_name + ' ' + usef_last_name,
             'name': user_name,
             'is_active': False  # Новый пользователь по умолчанию неактивен
         })
