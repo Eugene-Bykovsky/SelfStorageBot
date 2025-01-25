@@ -67,7 +67,8 @@ async def send_consent_message(message: Message, user_name: str):
         WELCOME_MESSAGE.format(user_name=user_name) + "\n\n"
         "Перед началом использования бота, пожалуйста, ознакомьтесь с "
         "документом о согласии на обработку персональных данных.\n\n"
-        "Нажмите кнопку ниже, чтобы подтвердить согласие:",
+        "Если вы согласны, нажмите 'Согласен с обработкой персональнных данных'."
+        "Иначе, нажмите 'Не согласен с обработкой персональнных данных'.",
         reply_markup=kb.consent_keyboard
     )
     consent_file = FSInputFile("files/soglasie.pdf")
@@ -102,3 +103,13 @@ async def handle_consent(message: Message):
     else:
         await message.answer("Пользователь не найден. Попробуйте начать "
                              "сначала, отправив /start.")
+
+    await message.answer("Главное меню:", reply_markup=kb.main_menu_keyboard)
+
+
+@start_router.message(F.text == "Не согласен с обработкой персональнных данных")
+async def disagree_command(message: Message):
+    await message.answer(
+        "Извините, к сожалению, Вы не можете продолжить без подтверждения согласия",
+        reply_markup=ReplyKeyboardRemove()
+    )
