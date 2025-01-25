@@ -56,6 +56,8 @@ async def cmd_start(message: Message):
     if user_data['is_active']:
         # Если пользователь активен, отправляем только приветственное сообщение
         await message.answer(WELCOME_MESSAGE.format(user_name=user_name))
+        await message.answer("Главное меню:",
+                             reply_markup=kb.main_menu_keyboard)
     else:
         # Если пользователь неактивен, отправляем текст с документом и кнопкой
         await send_consent_message(message, user_name)
@@ -107,9 +109,11 @@ async def handle_consent(message: Message):
     await message.answer("Главное меню:", reply_markup=kb.main_menu_keyboard)
 
 
-@start_router.message(F.text == "Не согласен с обработкой персональнных данных")
+@start_router.message(F.text == "Не согласен с обработкой "
+                                "персональнных данных")
 async def disagree_command(message: Message):
     await message.answer(
-        "Извините, к сожалению, Вы не можете продолжить без подтверждения согласия",
+        "Извините, к сожалению, Вы не можете продолжить без подтверждения "
+        "согласия",
         reply_markup=ReplyKeyboardRemove()
     )

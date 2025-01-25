@@ -30,3 +30,18 @@ main_menu_keyboard = InlineKeyboardMarkup(
             ],
         ]
     )
+
+order_box_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="📍 Адреса складов", callback_data="warehouse_addresses"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🚚 Заказать курьера", callback_data="order_courier"
+            )
+        ],
+    ]
+)
