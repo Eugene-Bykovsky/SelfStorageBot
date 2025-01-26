@@ -1,0 +1,4 @@
+aiogram==3.17.0
+environs==14.1.0
+requests==2.32.3
+segno==1.6.1
