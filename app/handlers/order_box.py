@@ -12,6 +12,8 @@ order_box_router = Router()
 
 class OrderCourierStates(StatesGroup):
     waiting_for_phone_number = State()
+    waiting_for_address = State()
+    waiting_for_storage_duration = State()
 
 
 @order_box_router.callback_query(F.data == "order_box")
@@ -103,32 +105,65 @@ async def handle_phone_number(message: Message, state: FSMContext):
         await message.answer("Пожалуйста, введите корректный номер телефона.")
         return
 
-    # Получаем user_id из состояния
-    state_data = await state.get_data()
-    user_id = state_data.get("user_id")
+    # Запрашиваем у пользователя адрес
+    await message.answer("Пожалуйста, введите адрес, по которому будет осуществляться доставка.")
+    await state.set_state(OrderCourierStates.waiting_for_address)
 
-    # Обновляем номер телефона пользователя через API
-    response = requests.patch(
-        f"{API_URL}/users/{user_id}/",
-        json={"phone_number": phone_number}
-    )
+    # Сохраняем номер телефона в состояние
+    await state.update_data(phone_number=phone_number)
 
-    if response.status_code == 200:
-        # Создаем запрос на вызов курьера
-        courier_response = requests.post(
-            f"{API_URL}/calls/",
-            json={
-                "user": user_id,
-                "call_type": "courier",
-            }
+
+@order_box_router.message(OrderCourierStates.waiting_for_address)
+async def handle_address(message: Message, state: FSMContext):
+    address = message.text.strip()
+
+    # Запрашиваем срок хранения
+    await message.answer("Пожалуйста, введите срок хранения в днях.")
+    await state.update_data(address=address)
+    await state.set_state(OrderCourierStates.waiting_for_storage_duration)
+
+
+@order_box_router.message(OrderCourierStates.waiting_for_storage_duration)
+async def handle_storage_duration(message: Message, state: FSMContext):
+    try:
+        storage_duration = int(message.text.strip())
+
+        # Получаем все данные из состояния
+        state_data = await state.get_data()
+        phone_number = state_data.get("phone_number")
+        address = state_data.get("address")
+
+        # Склеиваем все данные для поля pre_order
+        pre_order_data = f"Телефон: {phone_number}, Адрес: {address}, Срок хранения: {storage_duration} дней"
+
+        # Получаем user_id из состояния
+        user_id = state_data.get("user_id")
+
+        # Обновляем номер телефона пользователя через API
+        response = requests.patch(
+            f"{API_URL}/users/{user_id}/",
+            json={"phone_number": phone_number}
         )
 
-        if courier_response.status_code == 201:
-            await message.answer("Запрос успешно обработан. Ожидайте звонка.")
+        if response.status_code == 200:
+            # Создаем запрос на вызов курьера с добавленным pre_order
+            courier_response = requests.post(
+                f"{API_URL}/calls/",
+                json={
+                    "user": user_id,
+                    "call_type": "courier",
+                    "pre_order": pre_order_data  # Передаем склеенные данные
+                }
+            )
+
+            if courier_response.status_code == 201:
+                await message.answer("Запрос успешно обработан. Ожидайте звонка.")
+            else:
+                await message.answer("Произошла ошибка при создании запроса. Попробуйте позже.")
         else:
-            await message.answer("Произошла ошибка при создании запроса. Попробуйте позже.")
-    else:
-        await message.answer("Произошла ошибка при обновлении номера телефона. Попробуйте позже.")
+            await message.answer("Произошла ошибка при обновлении номера телефона. Попробуйте позже.")
+    except ValueError:
+        await message.answer("Пожалуйста, введите корректный срок хранения в днях.")
 
     # Завершаем состояние
     await state.clear()
