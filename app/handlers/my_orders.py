@@ -1,6 +1,8 @@
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, FSInputFile
 import requests
+import segno
+import os
 
 import app.keyboards as kb
 from config import API_URL
@@ -59,3 +61,23 @@ async def my_orders_handler(callback_query: CallbackQuery):
             "Произошла ошибка при проверке пользователя. Попробуйте позже."
         )
         await callback_query.answer()
+
+
+@my_orders_router.callback_query(F.data.startswith("order_"))
+async def order_qr_handler(callback_query: CallbackQuery):
+    order_id = callback_query.data.split("_")[1]
+
+    # Создание QR-кода
+    qr_code = segno.make_qr(order_id)
+    file_path = f"qrcodes/qr_{order_id}.png"
+    os.makedirs("qrcodes", exist_ok=True)
+    qr_code.save(file_path)
+
+    qr_code_file = FSInputFile(file_path)
+    await callback_query.message.answer_document(
+        document=qr_code_file,
+        caption=f"Ваш QR-код для заказа #{order_id}"
+    )
+    await callback_query.answer()
+
+    os.remove(file_path)
