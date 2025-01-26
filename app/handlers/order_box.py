@@ -1,11 +1,17 @@
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 import requests
 
 import app.keyboards as kb
 from config import API_URL
 
 order_box_router = Router()
+
+
+class OrderCourierStates(StatesGroup):
+    waiting_for_phone_number = State()
 
 
 @order_box_router.callback_query(F.data == "order_box")
@@ -51,9 +57,10 @@ async def handle_location_callback(callback_query: CallbackQuery):
 
 
 @order_box_router.callback_query(F.data == "order_courier")
-async def order_courier_handler(callback_query: CallbackQuery):
-    telegram_id = callback_query.from_user.id 
+async def order_courier_handler(callback_query: CallbackQuery, state: FSMContext):
+    telegram_id = callback_query.from_user.id
 
+    # Получаем данные о пользователе из API
     user_response = requests.get(f"{API_URL}/users/?telegram_id={telegram_id}")
 
     if user_response.status_code == 200:
@@ -70,7 +77,45 @@ async def order_courier_handler(callback_query: CallbackQuery):
         user_id = user["id"]
         print(f"User ID: {user_id}")
 
-        response = requests.post(
+        # Сохраняем user_id в состоянии
+        await state.update_data(user_id=user_id)
+
+        # Запрашиваем у пользователя номер телефона
+        await callback_query.message.answer(
+            "Пожалуйста, введите номер телефона. Наш оператор свяжется с Вами и уточнит детали. "
+            "Напоминаем о том, что замеры курьер проводит бесплатно."
+        )
+        await callback_query.answer()
+
+        # Устанавливаем состояние
+        await state.set_state(OrderCourierStates.waiting_for_phone_number)
+    else:
+        print(f"Ошибка при получении данных о пользователях: {user_response.status_code}")
+        await callback_query.message.answer("Произошла ошибка при получении данных о пользователях. Попробуйте позже.")
+
+
+@order_box_router.message(OrderCourierStates.waiting_for_phone_number)
+async def handle_phone_number(message: Message, state: FSMContext):
+    phone_number = message.text.strip()
+
+    # Проверяем формат номера телефона
+    if not phone_number.isdigit() or len(phone_number) < 10:
+        await message.answer("Пожалуйста, введите корректный номер телефона.")
+        return
+
+    # Получаем user_id из состояния
+    state_data = await state.get_data()
+    user_id = state_data.get("user_id")
+
+    # Обновляем номер телефона пользователя через API
+    response = requests.patch(
+        f"{API_URL}/users/{user_id}/",
+        json={"phone_number": phone_number}
+    )
+
+    if response.status_code == 200:
+        # Создаем запрос на вызов курьера
+        courier_response = requests.post(
             f"{API_URL}/calls/",
             json={
                 "user": user_id,
@@ -78,10 +123,12 @@ async def order_courier_handler(callback_query: CallbackQuery):
             }
         )
 
-        if response.status_code == 201:
-            await callback_query.message.answer("Запрос успешно обработан. Ожидайте звонка.")
+        if courier_response.status_code == 201:
+            await message.answer("Запрос успешно обработан. Ожидайте звонка.")
         else:
-            await callback_query.message.answer("Произошла ошибка при создании запроса. Попробуйте позже.")
+            await message.answer("Произошла ошибка при создании запроса. Попробуйте позже.")
     else:
-        print(f"Ошибка при получении данных о пользователях: {user_response.status_code}")
-        await callback_query.message.answer("Произошла ошибка при получении данных о пользователях.Попробуйте")
+        await message.answer("Произошла ошибка при обновлении номера телефона. Попробуйте позже.")
+
+    # Завершаем состояние
+    await state.clear()
