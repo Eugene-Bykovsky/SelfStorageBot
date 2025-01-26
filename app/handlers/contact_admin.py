@@ -14,7 +14,8 @@ class ContactAdminStates(StatesGroup):
 
 
 @contact_admin_router.callback_query(F.data == "contact_admin")
-async def contact_admin_handler(callback_query: CallbackQuery, state: FSMContext):
+async def contact_admin_handler(callback_query: CallbackQuery,
+                                state: FSMContext):
     telegram_id = callback_query.from_user.id
 
     # Получаем данные о пользователе из API
@@ -24,10 +25,14 @@ async def contact_admin_handler(callback_query: CallbackQuery, state: FSMContext
         user_data = user_response.json()
 
         # Фильтруем пользователя по telegram_id
-        user = next((u for u in user_data if u["telegram_id"] == telegram_id), None)
+        user = next((u for u in user_data if u["telegram_id"] == telegram_id),
+                    None)
 
         if user is None:
-            await callback_query.message.answer("Пользователь не зарегистрирован. Пожалуйста, зарегистрируйтесь.")
+            await callback_query.message.answer("Пользователь не "
+                                                "зарегистрирован. "
+                                                "Пожалуйста, "
+                                                "зарегистрируйтесь.")
             return
 
         user_id = user["id"]
@@ -44,7 +49,9 @@ async def contact_admin_handler(callback_query: CallbackQuery, state: FSMContext
         # Устанавливаем состояние
         await state.set_state(ContactAdminStates.waiting_for_phone_number)
     else:
-        await callback_query.message.answer("Произошла ошибка при получении данных о пользователях. Попробуйте позже.")
+        await callback_query.message.answer("Произошла ошибка при получении "
+                                            "данных о пользователях. "
+                                            "Попробуйте позже.")
 
 
 @contact_admin_router.message(ContactAdminStates.waiting_for_phone_number)
@@ -61,7 +68,8 @@ async def handle_admin_phone_number(message: Message, state: FSMContext):
     user_id = state_data.get("user_id")
 
     if not user_id:
-        await message.answer("Произошла ошибка: пользователь не найден. Пожалуйста, попробуйте снова.")
+        await message.answer("Произошла ошибка: пользователь не найден. "
+                             "Пожалуйста, попробуйте снова.")
         await state.clear()
         return
 
@@ -83,7 +91,8 @@ async def handle_admin_phone_number(message: Message, state: FSMContext):
     else:
         # Логируем ответ от API
         print(f"Ошибка API: {response.status_code}, Ответ: {response.text}")
-        await message.answer("Произошла ошибка при создании запроса. Попробуйте позже.")
+        await message.answer("Произошла ошибка при создании запроса. "
+                             "Попробуйте позже.")
 
     # Завершаем состояние
     await state.clear()

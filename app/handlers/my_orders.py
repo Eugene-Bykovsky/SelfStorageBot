@@ -15,18 +15,21 @@ async def my_orders_handler(callback_query: CallbackQuery):
     telegram_id = callback_query.from_user.id
 
     # Получение данных пользователя
-    user_response = requests.get(f"{API_URL}/users/", params={"telegram_id": telegram_id})
+    user_response = requests.get(f"{API_URL}/users/",
+                                 params={"telegram_id": telegram_id})
 
     if user_response.status_code == 200:
         users = user_response.json()
 
-        user = next((u for u in users if u["telegram_id"] == telegram_id), None)
+        user = next((u for u in users if u["telegram_id"] == telegram_id),
+                    None)
 
         if user:
             user_id = user["id"]
 
             # Получение списка заказов
-            orders_response = requests.get(f"{API_URL}/contracts/", params={"owner_name": user_id})
+            orders_response = requests.get(f"{API_URL}/contracts/",
+                                           params={"owner_name": user_id})
 
             if orders_response.status_code == 200 and orders_response.json():
                 orders = orders_response.json()

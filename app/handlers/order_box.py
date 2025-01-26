@@ -59,7 +59,8 @@ async def handle_location_callback(callback_query: CallbackQuery):
 
 
 @order_box_router.callback_query(F.data == "order_courier")
-async def order_courier_handler(callback_query: CallbackQuery, state: FSMContext):
+async def order_courier_handler(callback_query: CallbackQuery,
+                                state: FSMContext):
     telegram_id = callback_query.from_user.id
 
     # Получаем данные о пользователе из API
@@ -69,11 +70,15 @@ async def order_courier_handler(callback_query: CallbackQuery, state: FSMContext
         user_data = user_response.json()
 
         # Фильтруем пользователя по telegram_id
-        user = next((u for u in user_data if u["telegram_id"] == telegram_id), None)
+        user = next((u for u in user_data if u["telegram_id"] == telegram_id),
+                    None)
 
         if user is None:
             print(f"Пользователь с telegram_id={telegram_id} не найден.")
-            await callback_query.message.answer("Пользователь не зарегистрирован. Пожалуйста, зарегистрируйтесь.")
+            await callback_query.message.answer("Пользователь не "
+                                                "зарегистрирован. "
+                                                "Пожалуйста, "
+                                                "зарегистрируйтесь.")
             return
 
         user_id = user["id"]
@@ -84,7 +89,8 @@ async def order_courier_handler(callback_query: CallbackQuery, state: FSMContext
 
         # Запрашиваем у пользователя номер телефона
         await callback_query.message.answer(
-            "Пожалуйста, введите номер телефона. Наш оператор свяжется с Вами и уточнит детали. "
+            "Пожалуйста, введите номер телефона. Наш оператор свяжется с "
+            "Вами и уточнит детали. "
             "Напоминаем о том, что замеры курьер проводит бесплатно."
         )
         await callback_query.answer()
@@ -92,8 +98,11 @@ async def order_courier_handler(callback_query: CallbackQuery, state: FSMContext
         # Устанавливаем состояние
         await state.set_state(OrderCourierStates.waiting_for_phone_number)
     else:
-        print(f"Ошибка при получении данных о пользователях: {user_response.status_code}")
-        await callback_query.message.answer("Произошла ошибка при получении данных о пользователях. Попробуйте позже.")
+        print(f"Ошибка при получении данных о пользователях: "
+              f"{user_response.status_code}")
+        await callback_query.message.answer("Произошла ошибка при получении "
+                                            "данных о пользователях. "
+                                            "Попробуйте позже.")
 
 
 @order_box_router.message(OrderCourierStates.waiting_for_phone_number)
@@ -106,7 +115,8 @@ async def handle_phone_number(message: Message, state: FSMContext):
         return
 
     # Запрашиваем у пользователя адрес
-    await message.answer("Пожалуйста, введите адрес, по которому будет осуществляться доставка.")
+    await message.answer("Пожалуйста, введите адрес, по которому будет "
+                         "осуществляться доставка.")
     await state.set_state(OrderCourierStates.waiting_for_address)
 
     # Сохраняем номер телефона в состояние
@@ -134,7 +144,8 @@ async def handle_storage_duration(message: Message, state: FSMContext):
         address = state_data.get("address")
 
         # Склеиваем все данные для поля pre_order
-        pre_order_data = f"Телефон: {phone_number}, Адрес: {address}, Срок хранения: {storage_duration} дней"
+        pre_order_data = f"Телефон: {phone_number}, Адрес: {address}, " \
+                         f"Срок хранения: {storage_duration} дней"
 
         # Получаем user_id из состояния
         user_id = state_data.get("user_id")
@@ -157,13 +168,17 @@ async def handle_storage_duration(message: Message, state: FSMContext):
             )
 
             if courier_response.status_code == 201:
-                await message.answer("Запрос успешно обработан. Ожидайте звонка.")
+                await message.answer("Запрос успешно обработан. Ожидайте "
+                                     "звонка.")
             else:
-                await message.answer("Произошла ошибка при создании запроса. Попробуйте позже.")
+                await message.answer("Произошла ошибка при создании запроса. "
+                                     "Попробуйте позже.")
         else:
-            await message.answer("Произошла ошибка при обновлении номера телефона. Попробуйте позже.")
+            await message.answer("Произошла ошибка при обновлении номера "
+                                 "телефона. Попробуйте позже.")
     except ValueError:
-        await message.answer("Пожалуйста, введите корректный срок хранения в днях.")
+        await message.answer("Пожалуйста, введите корректный срок хранения в "
+                             "днях.")
 
     # Завершаем состояние
     await state.clear()
