@@ -34,6 +34,12 @@ main_menu_keyboard = InlineKeyboardMarkup(
                     callback_data="usage_rules"
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text="📢 Реклама",
+                    callback_data="ads"
+                )
+            ],
         ]
     )
 
@@ -71,6 +77,24 @@ async def warehouse_addresses_keyboard(places):
 
 
 def generate_orders_keyboard(orders):
+    # Создаём пустой список для строк кнопок
+    keyboard_buttons = []
+
+    # Проходим по списку заказов и создаём кнопки
+    for order in orders:
+        button = InlineKeyboardButton(
+            text=f"Получить QR-код для заказа #{order['id']}",
+            callback_data=f"order_{order['id']}"
+        )
+        keyboard_buttons.append([button])
+
+    # Создаём объект InlineKeyboardMarkup с кнопками
+    keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+
+    return keyboard
+
+
+def generate_statistics_keyboard(orders):
     # Создаём пустой список для строк кнопок
     keyboard_buttons = []
 

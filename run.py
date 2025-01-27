@@ -9,6 +9,7 @@ from app.handlers.storage_conditions import storage_conditions_router
 from app.handlers.usage_rules import usage_rules_router
 from app.handlers.contact_admin import contact_admin_router
 from app.handlers.my_orders import my_orders_router
+from app.handlers.advertisement import advertisement_router
 
 
 async def main():
@@ -19,7 +20,8 @@ async def main():
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_routers(start_router, order_box_router,
                        storage_conditions_router, usage_rules_router,
-                       contact_admin_router, my_orders_router)
+                       contact_admin_router, my_orders_router,
+                       advertisement_router)
     await dp.start_polling(bot)
 
 
