@@ -65,6 +65,7 @@ async def warehouse_addresses_keyboard(places):
 
         keyboard.add(InlineKeyboardButton(text=button_text,
                                           callback_data=callback_data))
+    keyboard.adjust(1)
 
     return keyboard.as_markup()
 
