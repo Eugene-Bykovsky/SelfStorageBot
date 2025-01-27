@@ -11,42 +11,33 @@ consent_keyboard = ReplyKeyboardMarkup(
 )
 
 main_menu_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="📦 Заказать бокс",
-                                  callback_data="order_box")],
-            [
-                InlineKeyboardButton(
-                    text="🗄 Условия хранения",
-                    callback_data="storage_conditions"
-                )
-            ],
-            [InlineKeyboardButton(text="📝 Мои заказы",
-                                  callback_data="my_orders")],
-            [
-                InlineKeyboardButton(
-                    text="📞 Связь с администратором",
-                    callback_data="contact_admin"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📃 Правила пользования сервисом",
-                    callback_data="usage_rules"
-                )
-            ],
-        ]
-    )
-
-order_box_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
+        [InlineKeyboardButton(text="📦 Заказать бокс",
+                              callback_data="order_box")],
         [
             InlineKeyboardButton(
-                text="📍 Адреса складов", callback_data="warehouse_addresses"
+                text="🗄 Условия хранения",
+                callback_data="storage_conditions"
+            )
+        ],
+        [InlineKeyboardButton(text="📝 Мои заказы",
+                              callback_data="my_orders")],
+        [
+            InlineKeyboardButton(
+                text="📞 Связь с администратором",
+                callback_data="contact_admin"
             )
         ],
         [
             InlineKeyboardButton(
-                text="🚚 Заказать курьера", callback_data="order_courier"
+                text="📃 Правила пользования сервисом",
+                callback_data="usage_rules"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📢 Реклама",
+                callback_data="ads"
             )
         ],
     ]
