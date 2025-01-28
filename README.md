@@ -48,13 +48,7 @@ python3 ???????.py
 
 #### Пример работы:
 
-# ?
-
-### Проверка работы:
-
-Используйте админку Django и войдите с учетными данными суперпользователя для управления cервиса SelfStorage.
-
-# ?
+<img width="640" alt="image" src="https://github.com/user-attachments/assets/017a7cab-3f82-4e00-87ac-7dda1e9f2a7b" />
 
 ## Цели проекта:
 
